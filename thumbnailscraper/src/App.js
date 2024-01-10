@@ -10,7 +10,7 @@ const App = () => {
         const data = await response.json();
 
         // Filter out objects without 'video' property and set the state
-        const filteredData = data.filter(item => item.video);
+        const filteredData = data.filter(item => item);
         setVideoData(filteredData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -26,10 +26,13 @@ const App = () => {
       <div>
         {videoData.map((item, index) => (
           <div key={index}>
-            <h2>{item.video.videoTitle}</h2>
-            <p>Views: {item.video.views}</p>
-            <p> {item.video.how_old}</p>
-            <img src={item.video.thumbnail} alt="Thumbnail" />
+            <h1>{item.date}</h1>
+            <img src={item.thumbnail} alt="Thumbnail" />
+            <h2>{item.videoTitle}</h2>
+            <p>Views: {item.views}</p>
+            <p> {item.channelName}</p>
+            <p> {item.subscibercount}</p>
+            <p> {item.amountofvideos}</p>
             {/* Add other properties you want to display */}
           </div>
         ))}
