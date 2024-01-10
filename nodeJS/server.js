@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer');
 const cors = require('cors'); // Import the CORS middleware
 const MongoClient = require('mongodb').MongoClient;
 
-const MAX_TEST_TIME = 1 * 60 * 1000;
+const MAX_TEST_TIME = 10 * 60 * 1000;
 const app = express();
 const port = 3003; // or any other port you prefer
 
@@ -15,15 +15,15 @@ async function scraper() {
     let browser;
     try {
        
-        browser = await puppeteer.launch({ headless: false });
+        browser = await puppeteer.launch({ headless: "new" });
         const page = await browser.newPage();
 
         await page.goto('https://www.youtube.com');
         await page.setViewport({ width: 1920, height: 100000 });
 
-        await page.waitForSelector('.yt-spec-button-shape-next');
-        await page.click('.yt-spec-button-shape-next[aria-label="Accept the use of cookies and other data for the purposes described"]');
-        await page.waitForNavigation();
+        // await page.waitForSelector('.yt-spec-button-shape-next[aria-label="Accept the use of cookies and other data for the purposes described"]');
+        // await page.click('.yt-spec-button-shape-next[aria-label="Accept the use of cookies and other data for the purposes described"]');
+        // await page.waitForNavigation();
         await page.waitForSelector('[title="Trending"]', { timeout: 50000 }); // Adjust the timeout value as needed
 
         const hrefValue = await page.$eval('[title="Trending"]', (element) => {
@@ -55,39 +55,48 @@ async function scraper() {
             return anchors.map((anchor) => anchor.href);
         });
         
-        // Visit each URL
-        for (const href of hrefs) {
-           
-        
-            currentTime = new Date();
-        
-            if (currentTime - startTime > MAX_TEST_TIME) {
-                console.log(`Maximum test time (${MAX_TEST_TIME} milliseconds) exceeded. Stopping the test.`);
-                break;
-            }
-        
-            // Navigate to the extracted URL
-            await page.goto(href);
-            await page.waitForSelector('#subscriber-count',"#videos-count");
+   
+       
 
+// Visit each URL
+for (const href of hrefs) {
+    currentTime = new Date();
 
-        
-            
-            const subsData = await page.$$eval('#subscriber-count', (elements) =>
+    if (currentTime - startTime > MAX_TEST_TIME) {
+        console.log(`Maximum test time (${MAX_TEST_TIME} milliseconds) exceeded. Stopping the test.`);
+        break;
+    }
+
+    // Navigate to the extracted URL
+    await page.goto(href);
+
+    try {
+        // Wait for '#subscriber-count' to be present, with a timeout of 5000 milliseconds (adjust as needed)
+        await page.waitForSelector('#subscriber-count', { timeout: 5000 });
+
+        // Wait for '#videos-count' to be present, with a timeout of 5000 milliseconds (adjust as needed)
+        await page.waitForSelector('#videos-count', { timeout: 5000 });
+
+        const subsData = await page.$$eval('#subscriber-count', (elements) =>
             elements.length > 0 ? elements.map((element) => element.textContent.trim()) : ['N/A']
-            );
-            
-            const videosData = await page.$$eval('#videos-count', (elements) =>
+        );
+
+        const videosData = await page.$$eval('#videos-count', (elements) =>
             elements.length > 0 ? elements.map((element) => element.textContent.trim()) : ['N/A']
-            );
-            console.log("logging", subsData, "and", videosData, "...");
-            
-            console.log(`Navigated to ${href}`);
-            subs.push(subsData);
-            videos.push(videosData);
-            await page.waitForTimeout(2000);
-        }
-        
+        );
+
+        console.log(`Navigated to ${href}. Logging subsData: ${subsData} and videosData: ${videosData}`);
+
+        subs.push(subsData);
+        videos.push(videosData);
+    } catch (error) {
+        console.log(`Timeout waiting for selectors on ${href}. Skipping to the next link.`);
+        continue;
+    }
+
+    await page.waitForTimeout(2000);
+}
+
        
         const view = [];
         const timeago = [];
