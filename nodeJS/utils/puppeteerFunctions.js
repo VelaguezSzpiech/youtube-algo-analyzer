@@ -1,74 +1,7 @@
-const express = require('express');
+// utils/puppeteerFunctions.js
 const puppeteer = require('puppeteer');
-const cors = require('cors');
-const bodyParser = require('body-parser');
 
-const MAX_TEST_TIME = 1 * 60 * 300000;
-const app = express();
-const port = 3003;
-
-app.use(cors());
-app.use(bodyParser.json());
-let scrapingInProgress = false;
-let storedData = [];
-let pagestoredData = [];
-
-app.get('/get/trend', async (req, res,videoCount) => {
-    try {
-      if (scrapingInProgress) {
-        res.json({ message: 'Scraping in progress, please wait' });
-      } else {
-          res.json(storedData);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('An error occurred while handling the GET request.');
-    }
-});
-app.get('/get/page', async (req, res,videoCount) => {
-    try {
-      if (scrapingInProgress) {
-        res.json({ message: 'Scraping in progress, please wait' });
-      } else {
-          res.json(pagestoredData);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('An error occurred while handling the GET request.');
-    }
-});
-app.post('/post', async (req, res) => {
-    try {
-      const channel = req.body.data;
-      const videoCount = req.body.data2;
-      const functionNames = req.body.functions;
-
-      if (scrapingInProgress) {
-        res.json({ message: 'Scraping already in progress, please wait' });
-        return;
-      }
-  
-      scrapingInProgress = true;
-     
-
-      for (const functionName of functionNames) {
-        if (functionName === 'trendscraper') {
-          await trendscraper(channel, videoCount);
-        } else if (functionName === 'pagescraper') {
-          await pagescraper(channel, videoCount);
-        }
-      }
-      res.json({ message: 'Data collected and processed', channel, videoCount });
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('An error occurred while handling the POST request.');
-    } finally {
-      scrapingInProgress = false;
-    }
-  });
-
-
-  const youtube ="https://www.youtube.com/"
+const youtube ="https://www.youtube.com/"
 async function trendscraper(channel,videoCount) {
     let browser;
     try {
@@ -168,6 +101,7 @@ async function trendscraper(channel,videoCount) {
         console.log("done scraping the trend page");
     }
 }
+
 async function pagescraper(channel,videoCount){
     let browser;
 
@@ -244,9 +178,8 @@ const thumbnail = await page.$$eval('.yt-core-image--fill-parent-height.yt-core-
         console.log("done scraping the "+channel);
     }
 }
-// Example usage:
-// scraper('https://www.youtube.com/', 5).then(result => console.log(result));
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+module.exports = {
+    trendscraper,
+    pagescraper,
+};
