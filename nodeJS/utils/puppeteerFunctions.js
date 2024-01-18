@@ -91,7 +91,7 @@ async function trendscraper(channel,videoCount) {
             date: new Date()
         }));
 
-        storedData = organizedData.slice(0, videoCount);
+        storedData = organizedData;
         return { storedData, organizedData };
     } catch (error) {
         console.error(`An error occurred while visiting YouTube: ${error}`);
@@ -104,12 +104,12 @@ async function trendscraper(channel,videoCount) {
 
 async function pagescraper(channel,videoCount){
     let browser;
-
+    
     try {
         browser = await puppeteer.launch({
-            headless: "new"
+            headless: false
         });
-        console.log(videoCount)
+        console.log("number of videos selected",videoCount)
         const page = await browser.newPage();
         await page.goto(youtube);
         await page.setViewport({ width: 1920, height: 10080 });
@@ -122,7 +122,6 @@ async function pagescraper(channel,videoCount){
         await page.goto(`${channel}/videos`);
      
      
-        await new Promise(resolve => setTimeout(resolve, 1));  // Wait for 1 second
 
         currentTime = new Date();
        
@@ -133,49 +132,179 @@ async function pagescraper(channel,videoCount){
        const subsData = await page.$$eval('#subscriber-count', (elements, videoCount) => {
     return elements.slice(0, videoCount).map(element => element.textContent.trim());
 }, videoCount);
+console.log("logging", subsData,);
 
 const videosData = await page.$$eval('#videos-count', (elements, videoCount) => {
     return elements.slice(0, videoCount).map(element => element.textContent.trim());
 }, videoCount);
+console.log("logging", videosData,);
 
 const channelName = await page.$$eval('#channel-handle', (elements, videoCount) => {
     return elements.slice(0, videoCount).map(element => element.textContent.trim());
 }, videoCount);
+console.log("logging", channelName,);
 
 const videoTitle = await page.$$eval('#video-title', (elements, videoCount) => {
     return elements.slice(0, videoCount).map(element => element.textContent.trim());
 }, videoCount);
+console.log("logging", videoTitle,);
 
 const views = await page.$$eval('.style-scope ytd-video-meta-block', (elements, videoCount) => {
-    return elements.slice(0, videoCount).map(element => element.textContent.trim());
+    return elements.slice(0, videoCount).map(element => element.textContent.trim().replace(/\n/g, ''));
 }, videoCount);
+console.log("logging", views,);
 
 const thumbnail = await page.$$eval('.yt-core-image--fill-parent-height.yt-core-image--fill-parent-width.yt-core-image.yt-core-image--content-mode-scale-aspect-fill.yt-core-image--loaded', (elements, videoCount) => {
     return elements.slice(0, videoCount).map(element => element.getAttribute('src'));
 }, videoCount);
+console.log("logging", thumbnail,);
 
-       
-     
+// const ChannelAge = await page.$$eval('.yt-core-image--fill-parent-height.yt-core-image--fill-parent-width.yt-core-image.yt-core-image--content-mode-scale-aspect-fill.yt-core-image--loaded', (elements, videoCount) => {
+//     return elements.slice(0, videoCount).map(element => element.getAttribute('src'));
+// }, videoCount);
+
+const topcommentsData =[]
+const howmanycommentsData =[]
+const VideolikesData =[]
+const transcriptData =[]
+const videolengthData =[]
+const descriptionData =[]
+
+const selectorForSecondElement = '#video-title-link';
+
+const hrefs = await page.$$eval(selectorForSecondElement, (anchors) => anchors.map((anchor) => anchor.href));
+
+let pageCounter = 0;
+currentTime = new Date();
+
+        // Visit each URL
+        for (const href of hrefs) {
+
+            if (pageCounter >= videoCount) {
+                console.log(`Visited ${videoCount} pages as per the specified videoCount.`);
+                break;
+            }
+          
+
+            // Navigate to the extracted URL
+            await page.goto(href);
+          
+            await new Promise(resolve => setTimeout(resolve, 5000)); 
+            await page.click('ytd-text-inline-expander #expand-sizer');
+
+            const description = await page.$$eval('#description-inline-expander', (elements) => elements.length > 0 ? elements.map((element) => element.textContent.trim().replace(/\n/g, '')) : ['N/A']);
+            console.log("Logging Description:", description);
+            
+
+            // Wait for the "Show transcript" button to be present
+          // Wait for the "Show transcript" button to be present
+            await page.waitForSelector('button[aria-label="Show transcript"]');
+
+// Click on the "Show transcript" button
+            await page.click('button[aria-label="Show transcript"]');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const transcriptselector = ".segment.style-scope.ytd-transcript-segment-renderer ";
+            const transcript = await page.$$eval(transcriptselector, (elements) => elements.length > 0 ? elements.map((element) => element.textContent.trim().replace(/\n/g, '')) : ['N/A']);
+            console.log("Logging Transcript:", transcript);
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+          
+            const howmanycomments = await page.$$eval('#count yt-formatted-string', (elements, videoCount) => {
+                return elements.slice(0, videoCount).map(element => element.textContent.trim().replace(/\n/g, ''));
+            }, videoCount);
+            console.log("Logging Number of Comments:", howmanycomments);
+            await new Promise(resolve => setTimeout(resolve, 1));  // Wait for 1 second
+
+            const topcomments  = await page.$$eval('.style-scope ytd-comment-renderer', (elements, videoCount) => {
+                return elements.slice(0, videoCount).map(element => {
+                    const author = element.querySelector('.style-scope ytd-comment-renderer #author-text')?.textContent.trim() || 'N/A';
+                    const content = element.querySelector('.style-scope ytd-comment-renderer #content-text')?.textContent.trim().replace(/\n/g, '') || 'N/A';
+                    const likes = element.querySelector('.style-scope ytd-comment-renderer #vote-count-middle')?.textContent.trim() || '0';
+                    const dislikes = element.querySelector('.style-scope ytd-comment-renderer #dislike-button .style-scope yt-icon-button #button #text')?.textContent.trim() || '0';
+                    const replies = element.querySelector('.style-scope ytd-comment-renderer #replies .style-scope yt-button-renderer #text')?.textContent.trim() || '0';
+            
+                    return {
+                        author,
+                    
+                        content,
+                        likes,
+                        dislikes,
+                        replies,
+                    };
+                });
+            }, videoCount);
+            
+            console.log("Logging Top Comments:", topcomments);
+            await new Promise(resolve => setTimeout(resolve, 1));  // Wait for 10 seconds
+            
+
+            const Videolikes = await page.$$eval('button[title="I like this"]', (elements) => {
+                return elements.length > 0 ? elements.map((element) => {
+                    const ariaLabelAttribute = element.getAttribute('aria-label');
+                    return ariaLabelAttribute ? ariaLabelAttribute.trim() : 'N/A';
+                }) : ['N/A'];
+            });           
+             console.log("logging videolikes", Videolikes,);
+            await new Promise(resolve => setTimeout(resolve, 1));  // Wait for 1 second
+
+
+            const videolength = await page.$$eval('.ytp-time-duration', (elements) => elements.length > 0 ? elements.map((element) => element.textContent.trim().replace(/\n/g, '')) : ['N/A']);
+            console.log("Logging Video Length:", videolength);
+            await new Promise(resolve => setTimeout(resolve, 1));  // Wait for 1 second
+            
+
+
+          
+
+            console.log(`Navigated to ${href}`);
+            topcommentsData.push(topcomments);
+            howmanycommentsData.push(howmanycomments);
+            transcriptData.push(transcript);
+            VideolikesData.push(Videolikes);
+            videolengthData.push(videolength);
+            descriptionData.push(description);
+        
+            await page.waitForTimeout(100);
+            pageCounter++;
+        }
+
+        const ytvdeo = videoTitle.map((title, index) => ({
+            thumbnail: thumbnail[index] || 'N/A',
+            videoTitle: title || 'N/A',
+            views: views[index] || 'N/A',
+            topComments: topcommentsData[0],
+            howmanycommentsData:howmanycommentsData[index],
+            likes: VideolikesData[index],
+            videolengthData:videolengthData[index],
+            descriptionData:descriptionData[index],
+            transcript:transcriptData[0],
+        }));
+
+const ytchanneldata = {
+    name:channelName[0],
+    subscriberCount: subsData[0] || 'N/A',
+    amountOfVideos: videosData[0] || 'N/A',
+    howOld: 'Channel age',
+};
+
+
+const organizedData = {
+    ytchanneldata,
+    ytvdeo,
+  };
       
-        const organizedData = videoTitle.map((title, index) => ({
-          thumbnail: thumbnail[index] || 'N/A',
-          videoTitle: title || 'N/A',
-          views: views[0] || 'N/A',
-          channelName: channelName[0] || 'N/A',
-          subscriberCount: subsData[0] || 'N/A',
-          amountOfVideos: videosData[0] || 'N/A',
-      }));
+
+  pagestoredData = organizedData;
+  return { pagestoredData, organizedData };
+
       
-
-        pagestoredData = organizedData;
-
-        return { pagestoredData };
     } catch (error) {
         console.error(`An error occurred while visiting YouTube: ${error}`);
         throw error;
     } finally {
-        await browser?.close();
         console.log("done scraping the "+channel);
+
     }
 }
 

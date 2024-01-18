@@ -7,6 +7,7 @@ async function getPage(scrapingInProgress,req, res) {
             res.json({ message: 'Scraping in progress, please wait' });
           } else {
               res.json(pagestoredData);
+              console.log("pushed")
           }
      } catch (error) {
           console.error('Error:', error);

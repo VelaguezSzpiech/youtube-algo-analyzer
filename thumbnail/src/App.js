@@ -17,6 +17,7 @@ const fetchData = async (url) => {
     const response = await fetch(url);
     const result = await response.json();
     if (Array.isArray(result) && result.length > 0) {
+      console.log(result)
       return result;
     } else {
       console.error('Data received is not an array or is empty:', result);
