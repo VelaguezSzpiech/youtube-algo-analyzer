@@ -1,5 +1,144 @@
-.App {
+body {
+  
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+}
+
+.parent {
+  display: flex;
+  justify-content: center; /* Center child elements vertically */
+  align-items: center; /* Center child elements horizontally */
+  padding-top: 10vh; /* Adjusted to 10% buffer to the top */
+}
+
+.input-parent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc; /* Border for the input parent */
+  padding: 10px;
+  border-radius: 25px; /* More rounded borders */
+  width: 70%; /* Adjust as needed */
+}
+
+.input-text {
+  width: 70%; /* 70% of the width */
+  margin-right: 5px;
+  margin-left: 5px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 25px; /* More rounded borders */
+}
+
+.input-number {
+  width: 30%; /* 30% of the width */
+  margin-right: 5px;
+  margin-left: 5px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 25px; /* More rounded borders */
+}
+
+
+.data-button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 25px; /* More rounded borders */
+  background-color: #ed0b0b;
+  color: white;
+  cursor: pointer;
+}
+
+.data-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.label-checkbox {
+  display: flex;
+  flex-direction: column; /* Stack child elements vertically */
+  align-items: flex-start;
+  margin: 5px; /* Align text to the start */
+}
+
+.checkbox-container {
+  
+  margin: 2px;
+  display: flex; /* Align checkbox and text horizontally */
+  align-items: center; /* Center checkbox and text vertically */
+}
+
+
+
+.data-all-parent {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-gap: 20px;
+  padding: 20px;
+  margin-top: 5;
+}
+
+.data-sub-parent {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* Thumbnail Styles */
+.Thumbnail {
+  width: 100%;
+  height: auto;
+}
+
+/* Video Data Container Styles */
+.video-data-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Channel Data Styles */
+.channeldata {
+  list-style-type: none;
+  padding: 0;
+}
+
+.channeldata li {
+  padding: 5px 0;
+}
+
+.youtuberName {
   text-align: center;
-  background-color: #282c34;
-  color: #282c34;
+  color: #333;
+  font-size: 1.2em;
+}
+
+.video-data-container h2 {
+  margin-top: 10px;
+  font-size: 1em;
+  color: #666;
+}
+
+
+:root {
+  --text-color-light: #4d4d4d;
+  --bg-color-light: #eaeaea;
+  --text-color-dark: #f6f6f6;
+  --bg-color-dark: #414141;
+}
+
+body {
+  color: var(--text-color-light);
+  background-color: var(--bg-color-light);
+}
+
+body.dark-mode {
+  color: var(--text-color-dark);
+  background-color: var(--bg-color-dark);
 }
