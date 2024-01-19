@@ -10,7 +10,8 @@ body {
   display: flex;
   justify-content: center; /* Center child elements vertically */
   align-items: center; /* Center child elements horizontally */
-  padding-top: 10vh; /* Adjusted to 10% buffer to the top */
+  padding-top: 10vh;
+  padding-bottom:10vh ; /* Adjusted to 10% buffer to the top */
 }
 
 .input-parent {
@@ -85,22 +86,25 @@ body {
   border: 1px solid #ccc;
   border-radius: 10px;
   padding: 20px;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+  display: flex; /* Changed from grid to flex */
+  flex-direction: column; /* Added this line */
+  align-items: center; /* Added this line */
+  justify-content: center; /* Added this line */
+  overflow: hidden;
 }
 
-/* Thumbnail Styles */
-.Thumbnail {
-  width: 100%;
-  height: auto;
-}
-
-/* Video Data Container Styles */
 .video-data-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: center; /* Added this line */
+  justify-content: center; /* Added this line */
+}
+
+.Thumbnail {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 5px;
 }
 
 /* Channel Data Styles */
@@ -114,9 +118,11 @@ body {
 }
 
 .youtuberName {
+  width:fit-content;
+  margin: 0 auto;
   text-align: center;
   color: #333;
-  font-size: 1.2em;
+  font-size: 1em; /* Adjust this value as needed */
 }
 
 .video-data-container h2 {
@@ -128,7 +134,7 @@ body {
 
 :root {
   --text-color-light: #4d4d4d;
-  --bg-color-light: #eaeaea;
+  --bg-color-light: #ffffff;
   --text-color-dark: #f6f6f6;
   --bg-color-dark: #414141;
 }

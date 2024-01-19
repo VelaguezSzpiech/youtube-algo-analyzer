@@ -75,7 +75,11 @@ app.post('/post', async (req, res) => {
       let browser;
       try {
           browser = await puppeteer.launch({
-              headless: "new"
+              headless: "new",
+              args: [
+                '--disable-extensions-except=E:\\Youtube-AdBlocker-2.0.0',
+                '--load-extension=E:\\Youtube-AdBlocker-2.0.0'
+              ]
           });
           const page = await browser.newPage();
           await page.goto(youtube);
@@ -163,17 +167,21 @@ app.post('/post', async (req, res) => {
   
               // Wait for the "Show transcript" button to be present
               // Wait for the "Show transcript" button to be present
-              await page.waitForSelector('button[aria-label="Show transcript"]');
   
-              // Click on the "Show transcript" button
-              await page.click('button[aria-label="Show transcript"]');
 
               const transcriptselector = ".segment.style-scope.ytd-transcript-segment-renderer ";
-              await page.waitForSelector(transcriptselector);
-             
-              const transcript = await page.$$eval(transcriptselector, (elements) => elements.length > 0 ? elements.map((element) => element.textContent.trim().replace(/\n/g, '')) : ['N/A']);
-              console.log("Logging Transcript:", transcript);
+              let transcript; // Declare transcript here
+
+              try {
+                await page.waitForSelector('button[aria-label="Show transcript"]',{ timeout: 1000 });
+                await page.click('button[aria-label="Show transcript"]',{ timeout: 1000 });
+                await page.waitForSelector(transcriptselector); // wait for 5 seconds
+                 transcript = await page.$$eval(transcriptselector, (elements) => elements.length > 0 ? elements.map((element) => element.textContent.trim().replace(/\n/g, '')) : ['N/A']);
+                console.log("Logging Transcript:", transcript);
             
+            } catch (error) {
+                console.log("No transcript available for this video.");
+            }
               
               const howmanycomments = await page.$$eval('#count yt-formatted-string', (elements, videoCount) => {
                   return elements.slice(0, videoCount).map(element => element.textContent.trim().replace(/\n/g, ''));
@@ -188,6 +196,7 @@ app.post('/post', async (req, res) => {
                       const replies = element.querySelector('.style-scope ytd-comment-renderer #replies .style-scope yt-button-renderer #text')?.textContent.trim() || '0';
               
                       return {
+                        transcript,
                           author,
                           content,
                           likes,
@@ -198,7 +207,6 @@ app.post('/post', async (req, res) => {
               }, videoCount);
               
               console.log("Logging Top Comments:", topcomments);
-              await new Promise(resolve => setTimeout(resolve, 1));  // Wait for 10 seconds
               
   
               const Videolikes = await page.$$eval('button[title="I like this"]', (elements) => {
@@ -293,13 +301,18 @@ app.post('/post', async (req, res) => {
       
       try {
           browser = await puppeteer.launch({
-              headless: false
+              headless: "new",
+              args: [
+                '--disable-extensions-except=E:\\Youtube-AdBlocker-2.0.0',
+                '--load-extension=E:\\Youtube-AdBlocker-2.0.0'
+              ]
           });
           console.log("number of videos selected",videoCount)
           const page = await browser.newPage();
           await page.goto(youtube);
           await page.setViewport({ width: 1920, height: 10080 });
-  
+          await new Promise(resolve => setTimeout(resolve, 100));  // Wait for 10 seconds
+
           await page.waitForSelector('.yt-spec-button-shape-next');
           await page.click('.yt-spec-button-shape-next[aria-label="Accept the use of cookies and other data for the purposes described"]');
           await page.waitForNavigation();
@@ -425,12 +438,14 @@ console.log("logging thumbnail", thumbnail,);
               await new Promise(resolve => setTimeout(resolve, 1));  // Wait for 10 seconds
               
   
-              const Videolikes = await page.$$eval('button[title="I like this"]', (elements) => {
-                  return elements.length > 0 ? elements.map((element) => {
-                      const ariaLabelAttribute = element.getAttribute('aria-label');
-                      return ariaLabelAttribute ? ariaLabelAttribute.trim() : 'N/A';
-                  }) : ['N/A'];
-              });           
+              const Videolikes = await page.$eval('button[class="yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--segmented-start"]', (element) => {
+                const ariaLabelAttribute = element.getAttribute('aria-label');
+                const label = ariaLabelAttribute ? ariaLabelAttribute.trim() : 'N/A';
+                const match = label.match(/(\d+)/); // This regular expression matches any sequence of digits (\d+).
+                return match ? match[0] : 'N/A'; // If a match is found, return the first (and only) match. Otherwise, return 'N/A'.
+            });
+            
+            
                console.log("logging videolikes", Videolikes,);
               await new Promise(resolve => setTimeout(resolve, 1));  // Wait for 1 second
   
